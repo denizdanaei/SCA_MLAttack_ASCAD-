@@ -8,22 +8,25 @@ import time
 
 
 
-def traceSet(traces, pt, setNumber,trainSize, testSize):
-    index = np.random.choice(60000,setNumber)
-    # print(index.shape)
-    tracesRandom = []
-    ptRandom = []
+def traceSet(traces, pt,trainSize, testSize):
+    tracesForTesting = traces[trainSize-1:-1]
+    # print('tracesForTesting',tracesForTesting.shape)
+    ptForTesting = pt[trainSize-1:-1]
+    # print('ptForTesting',ptForTesting.shape)
+    index = np.random.choice(60000-trainSize,testSize)
+    # print('index',index.shape)
+    tracesTest = []
+    ptTest = []
     for i in index:
-        tracesRandom.append(traces[i])
-        ptRandom.append(pt[i])
+        tracesTest.append(tracesForTesting[i])
+        ptTest.append(ptForTesting[i])
 
-    tracesRandom = np.array(tracesRandom)
-    ptRandom = np.array(ptRandom)
-    tracesTrain = tracesRandom[0:trainSize]
-    ptTrain  = ptRandom[0:trainSize]
-    tracesTest = tracesRandom[trainSize:trainSize+testSize]
-    ptTest  = ptRandom[trainSize:trainSize+testSize]
-    return (tracesTrain,ptTrain,tracesTest,ptTest)
+    tracesTest = np.array(tracesTest)
+    ptTest = np.array(ptTest)
+
+    print('tracesTest',tracesTest.shape)
+    print('ptTest',ptTest.shape)
+    return (tracesTest,ptTest)
 
 def SVM(tracesTrain,ptTrain,tracesTest,ptTest):
 
@@ -60,7 +63,7 @@ def SVM(tracesTrain,ptTrain,tracesTest,ptTest):
     print('training time',toc-tic)
 
     print('now the attack phase:')
-    key_rank = np.zeros(16)    
+    key_rank = np.zeros(len(tracesTest))    
     P_k = np.zeros(256)
     tic = time.perf_counter()
     predict = clf.predict_proba(tracesTest)
@@ -77,7 +80,7 @@ def SVM(tracesTrain,ptTrain,tracesTest,ptTest):
             # print(HW, p_kj)
             P_k[kguess] += p_kj
 
-        print (P_k.argsort()[-5:])
+        print (P_k.argsort()[-50:])
         # print (P_k[P_k.argsort()[-15:]])    
 
         tarefs = np.argsort(P_k)[::-1]
@@ -86,8 +89,6 @@ def SVM(tracesTrain,ptTrain,tracesTest,ptTest):
         print(key_rank[j])
 
     print(key_rank)
-
-
     print('GE = ', sum/len(tracesTest))
     return sum/len(tracesTest)
 
@@ -100,10 +101,11 @@ pt = np.load(r'data/plain.npy')
 knownkey = np.load(r'data/key.npy')
 masks = np.load(r'data/masks.npy')
 
-
+tracesTrain = traces[0:18000]
+ptTrain = pt[0:18000]
 avr_GE = []
-for i in range(2):
-    tracesTrain,ptTrain,tracesTest,ptTest = traceSet(traces,pt,24000,5000,10)
+for i in range(1):
+    tracesTest,ptTest = traceSet(traces,pt,18000,100)
     # print(myset[3].shape)
     avr_GE.append(SVM(tracesTrain,ptTrain,tracesTest,ptTest))
 
