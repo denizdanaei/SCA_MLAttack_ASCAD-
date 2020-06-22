@@ -6,6 +6,27 @@ from sklearn.linear_model import LogisticRegression
 import time
 
 
+
+
+def traceSet(traces, pt, setNumber):
+    index = np.random.choice(60000,setNumber)
+    # print(index.shape)
+    tracesRandom = []
+    ptRandom = []
+    for i in index:
+        tracesRandom.append(traces[i])
+        ptRandom.append(pt[i])
+    train =5000
+    test =5010
+    testEnd = test + 10
+    tracesTrain = traces[0:train]
+    ptTrain  = pt[0:train]
+    tracesTest = traces[test:testEnd]
+    ptTest  = pt[test:testEnd]
+    return tracesTrain,ptTrain,tracesTest,ptTest
+
+
+
 traces = np.load(r'data/traces_50features.npy')
 pt = np.load(r'data/plain.npy')
 knownkey = np.load(r'data/key.npy')
@@ -31,10 +52,24 @@ sbox=(
     0xe1,0xf8,0x98,0x11,0x69,0xd9,0x8e,0x94,0x9b,0x1e,0x87,0xe9,0xce,0x55,0x28,0xdf,
     0x8c,0xa1,0x89,0x0d,0xbf,0xe6,0x42,0x68,0x41,0x99,0x2d,0x0f,0xb0,0x54,0xbb,0x16) 
 
-tracesTrain = traces[0:18000]
-ptTrain  = pt[0:18000]
-tracesTest = traces[18000:24000]
-ptTest  = pt[18000:24000]
+# index=np.random.choice(60000,24000)
+# # print(index.shape)
+# tracesRandom = []
+# ptRandom = []
+# for i in index:
+#     tracesRandom.append(traces[i])
+#     ptRandom.append(pt[i])
+# # print(np.array(tracesRandom).shape)
+
+# # print(np.array(outputSboxHW).shape)
+# train =5000
+# test =5010
+# testEnd = test + 10
+# tracesTrain = traces[0:train]
+# ptTrain  = pt[0:train]
+# tracesTest = traces[test:testEnd]
+# ptTest  = pt[test:testEnd]
+tracesTrain,ptTrain,tracesTest,ptTest = traceSet(traces,pt,24000)
 
 outputSbox = np.array([sbox[ptTrain[i][0] ^ knownkey[i][0]] for i in range(len(ptTrain))])
 outputSboxHW   = [hamming[s] for s in outputSbox]
@@ -50,7 +85,7 @@ print('training time',toc-tic)
 
 
 print('now the attack phase:')
-ge = np.zeros(16)    
+key_rank = np.zeros(16)    
 P_k = np.zeros(256)
 tic = time.perf_counter()
 predict = clf.predict_proba(tracesTest)
@@ -67,11 +102,15 @@ for j in range(len(tracesTest)):
         # print(HW, p_kj)
         P_k[kguess] += p_kj
 
-    print (P_k.argsort()[-15:])
+    print (P_k.argsort()[-5:])
     # print (P_k[P_k.argsort()[-15:]])    
 
     tarefs = np.argsort(P_k)[::-1]
-    ge[0] = list(tarefs).index(knownkey[0][0])
-    sum += ge[0]
-    print(ge[0])
-# print('GE = ', sum/len(tracesTest))
+    key_rank[j] = list(tarefs).index(knownkey[0][0])
+    sum += key_rank[j]
+    print(key_rank[j])
+
+print(key_rank)
+
+
+print('GE = ', sum/len(tracesTest))
