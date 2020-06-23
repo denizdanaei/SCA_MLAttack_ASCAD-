@@ -3,6 +3,7 @@ import numpy as np
 from sklearn import svm
 import random
 from sympy import sieve
+import matplotlib.pyplot as plt
 
 
 def cal_con_primes(_from,_to, N):
@@ -123,6 +124,7 @@ for i in range(3):
     while(N<restOftraces):
         N *=5
 print(avr_GE)
-
-
+plt.plot(N,avr_GE)
+plt.grid()
+plt.show()
 
