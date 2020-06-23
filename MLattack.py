@@ -5,7 +5,7 @@ import random
 from sympy import sieve
 import matplotlib.pyplot as plt
 
-__addnoise__ =True; noiseLevel = 20
+__addnoise__ =True; noiseLevel = 40
 
 def cal_con_primes(_from,_to):
     con_primes = [i for i in sieve.primerange(_from, _to) if(i % 4 == 3)]
@@ -88,9 +88,8 @@ traces = np.load(r'data/traces_50features.npy')
 if(__addnoise__): traces = addNoise(traces, noiseLevel)
 pt = np.load(r'data/plain.npy')
 knownkey = np.load(r'data/key.npy')
-masks = np.load(r'data/masks.npy')
 
-trainSize =12000
+trainSize =24000
 tracesTrain = traces[0:trainSize]
 restOftraces = traces[trainSize:-1]
 ptTrain = pt[0:trainSize]

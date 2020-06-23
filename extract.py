@@ -13,19 +13,21 @@ def extract(filePath):
 			sys.exit(-1)
 
 	# Profiling_traces = in_file['Profiling_traces']
-	raw_traces = in_file['traces']
+	# raw_traces = in_file['traces']
 	# np.delete(raw_traces, [2000], axis=1)
-	raw_traces = raw_traces[0:60000,0:1000]
-	print(raw_traces.shape)
+	# traces = raw_traces[0:60000,0:1000]
+	# print(raw_traces.shape)
 	raw_data = in_file['metadata']
-	raw_plaintexts = raw_data['plaintext']
-	raw_keys = raw_data['key']
-	raw_masks = raw_data['masks']
+	plaintexts = raw_data['plaintext']
+	keys = raw_data['key']
+	masks = raw_data['masks']
+	ciphers = raw_data['ciphertext']
 
-	np.save('data/traces', raw_traces)
-	np.save('data/plain', raw_plaintexts)
-	np.save('data/key', raw_keys)
-	np.save('data/masks', raw_masks)
+	# np.save('data/traces', traces)
+	np.save('data/plains', plaintexts)
+	np.save('data/keys', keys)
+	np.save('data/masks', masks)
+	np.save('data/ciphers', ciphers)
 
 
 print('extracting arrays to files...\n')
