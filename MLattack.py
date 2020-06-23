@@ -6,13 +6,12 @@ from sympy import sieve
 import matplotlib.pyplot as plt
 
 
-def cal_con_primes(_from,_to, N):
+def cal_con_primes(_from,_to, testSize):
     con_primes = [i for i in sieve.primerange(_from, _to) if(i % 4 == 3)]
     p,q = np.random.choice(con_primes,2)
-    while(p*q<N & p*q>_to):
+    while(p*q<testSize & p*q>_to):
         p,q = np.random.choice(con_primes,2)
     return p*q
-
 
 def randomNumbers(N, M):
     index = []
@@ -21,11 +20,14 @@ def randomNumbers(N, M):
     for _ in range(N):
         index.append(x%N)
         x = x*x % M
+    print(i for i in index  if (isinstance(i, float)))
     return index
+
+# def addNoise():
 
 def traceSet(traces, pt, testSize):
 
-    index = randomNumbers(testSize,cal_con_primes(2,len(traces),testSize))
+    index = randomNumbers(len(traces),cal_con_primes(2,len(traces),testSize))
     # print('index',index.shape)
     tracesTest = []
     ptTest = []
@@ -36,8 +38,8 @@ def traceSet(traces, pt, testSize):
     tracesTest = np.array(tracesTest)
     ptTest = np.array(ptTest)
 
-    print('tracesTest',tracesTest.shape)
-    print('ptTest',ptTest.shape)
+    # print('tracesTest',tracesTest.shape)
+    # print('ptTest',ptTest.shape)
     return (tracesTest,ptTest)
 
 def prediction(tracesTest,ptTest):
@@ -47,7 +49,7 @@ def prediction(tracesTest,ptTest):
     predict = clf.predict_proba(tracesTest)
     # print('prediction time',toc-tic)
 
-    print(knownkey[0][0])
+    # print(knownkey[0][0])
 
     sum = 0
     for j in range(len(tracesTest)):
@@ -57,7 +59,7 @@ def prediction(tracesTest,ptTest):
             # print(HW, p_kj)
             P_k[kguess] += p_kj
 
-        print (P_k.argsort()[-50:])
+        # print (P_k.argsort()[-50:])
         # print (P_k[P_k.argsort()[-15:]])    
 
         tarefs = np.argsort(P_k)[::-1]
@@ -78,10 +80,10 @@ pt = np.load(r'data/plain.npy')
 knownkey = np.load(r'data/key.npy')
 masks = np.load(r'data/masks.npy')
 
-tracesTrain = traces[0:18000]
-restOftraces = traces[18000:-1]
-ptTrain = pt[0:18000]
-restOfpt = pt[18000:-1]
+tracesTrain = traces[0:27000]
+restOftraces = traces[27000:-1]
+ptTrain = pt[0:27000]
+restOfpt = pt[27000:-1]
 
 
 hamming = [bin(n).count("1") for n in range(256)]
@@ -113,18 +115,25 @@ clf = svm.SVC(kernel='rbf', decision_function_shape = 'ovo', probability = True)
 clf.fit(tracesTrain, outputSboxHW)
 
 
-avr_GE = []
-x_axis = []
+
+testSize = [10,50,250,1250,6250,7770,9020,10270,11520,13040]
+avr_GE = np.zeros(len(testSize))
 print('now the attack phase:')
-N = 10
-for i in range(3):
-    tracesTest,ptTest = traceSet(restOftraces,restOfpt,N)
-    avr_GE.append(prediction(tracesTest,ptTest))
-    x_axis.append(N)
-    while(N<restOftraces):
-        N *=5
+
+k = 0
+for i in testSize:
+    tracesShuffled,ptShuffled = traceSet(restOftraces,restOfpt,i)
+    howManytestSet = int(len(tracesShuffled)/i)
+    for j in range(howManytestSet):
+        tracesTest = tracesShuffled[j:j+i]
+        ptTest = ptShuffled[j:j+i]
+        avr_GE[k]+=(prediction(tracesTest,ptTest))
+        j+=i
+    avr_GE[k]/=howManytestSet
+    k+=1
+
 print(avr_GE)
-plt.plot(N,avr_GE)
+plt.plot(testSize,avr_GE)
 plt.grid()
 plt.show()
 

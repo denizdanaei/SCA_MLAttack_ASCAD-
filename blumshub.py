@@ -6,29 +6,28 @@ import numpy as np
 # seed = random.randint(1,1e10)
 
 
-def cal_con_primes(_from,_to, N):
+def cal_con_primes(_from,_to, testSize):
     con_primes = [i for i in sieve.primerange(_from, _to) if(i % 4 == 3)]
     p,q = np.random.choice(con_primes,2)
-    while(p*q<N):
+    while(p*q<testSize & p*q>_to):
         p,q = np.random.choice(con_primes,2)
-    return p,q
+    return p*q
 
-
-def randomNumbers(N,p,q, seed):
+def randomNumbers(N, M):
     index = []
-    M = p*q
-    x = seed
+    x = random.randint(1, 1e10)
 
     for _ in range(N):
         index.append(x%N)
         x = x*x % M
     return index
 
-p,q = cal_con_primes(2,42000,6000)
+
+M = cal_con_primes(2,32999,12000)
 N = 6000
 
-print(p,q)
-# print(randomNumbers(6000,p,q,random.randint(1,1e10)))
+# print(p,q)
+print(i for i in randomNumbers(12000,M)  if (isinstance(i, float)))
 
 
 
