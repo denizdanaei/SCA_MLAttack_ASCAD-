@@ -5,6 +5,7 @@ import random
 from sympy import sieve
 import matplotlib.pyplot as plt
 
+__addnoise__ =True; noiseLevel = 40
 
 def cal_con_primes(_from,_to, testSize):
     con_primes = [i for i in sieve.primerange(_from, _to) if(i % 4 == 3)]
@@ -23,7 +24,13 @@ def randomNumbers(N, M):
     print(i for i in index  if (isinstance(i, float)))
     return index
 
-# def addNoise():
+def addNoise(traces, noiseLevel):
+    newTraces = []
+    level = random.randint(0,noiseLevel)
+    for i in range(len(traces)):
+        newTraces.append(traces[i]+level)
+    return np.array(newTraces)
+
 
 def traceSet(traces, pt, testSize):
 
@@ -76,14 +83,15 @@ def prediction(tracesTest,ptTest):
 # =================================================================
 # =================================================================
 traces = np.load(r'data/traces_50features.npy')
+if(__addnoise__): traces = addNoise(traces, noiseLevel)
 pt = np.load(r'data/plain.npy')
 knownkey = np.load(r'data/key.npy')
 masks = np.load(r'data/masks.npy')
 
-tracesTrain = traces[0:27000]
-restOftraces = traces[27000:-1]
-ptTrain = pt[0:27000]
-restOfpt = pt[27000:-1]
+tracesTrain = traces[0:18000]
+restOftraces = traces[18000:-1]
+ptTrain = pt[0:18000]
+restOfpt = pt[18000:-1]
 
 
 hamming = [bin(n).count("1") for n in range(256)]
@@ -116,7 +124,8 @@ clf.fit(tracesTrain, outputSboxHW)
 
 
 
-testSize = [10,50,250,1250,6250,7770,9020,10270,11520,13040]
+# testSize = [10,50,250,1250,6250,7770,9020,10270,11520,13040]
+testSize = [10,50,250,1250,2500,3750,5000,6250]
 avr_GE = np.zeros(len(testSize))
 print('now the attack phase:')
 
@@ -136,4 +145,3 @@ print(avr_GE)
 plt.plot(testSize,avr_GE)
 plt.grid()
 plt.show()
-
