@@ -5,12 +5,12 @@ import random
 from sympy import sieve
 import matplotlib.pyplot as plt
 
-__addnoise__ =False; noiseLevel = 20
+__addnoise__ =True; noiseLevel = 20
 
-def cal_con_primes(_from,_to, testSize):
+def cal_con_primes(_from,_to):
     con_primes = [i for i in sieve.primerange(_from, _to) if(i % 4 == 3)]
     p,q = np.random.choice(con_primes,2)
-    while(p*q<testSize & p*q>_to):
+    while(p*q>_to):
         p,q = np.random.choice(con_primes,2)
     return p*q
 
@@ -27,14 +27,16 @@ def randomNumbers(N, M):
 def addNoise(traces, noiseLevel):
     newTraces = []
     level = random.randint(0,noiseLevel)
-    for i in range(len(traces)):
+    i = 0
+    while (i+level<len(traces)):
         newTraces.append(traces[i+level])
+        i+=1
     return np.array(newTraces)
 
 
-def traceSet(traces, pt, testSize):
+def traceSet(traces, pt):
 
-    index = randomNumbers(len(traces),cal_con_primes(2,len(traces),testSize))
+    index = randomNumbers(len(traces),cal_con_primes(2,len(traces)))
     # print('index',index.shape)
     tracesTest = []
     ptTest = []
@@ -88,7 +90,7 @@ pt = np.load(r'data/plain.npy')
 knownkey = np.load(r'data/key.npy')
 masks = np.load(r'data/masks.npy')
 
-trainSize =18000
+trainSize =12000
 tracesTrain = traces[0:trainSize]
 restOftraces = traces[trainSize:-1]
 ptTrain = pt[0:trainSize]
@@ -126,21 +128,25 @@ clf.fit(tracesTrain, outputSboxHW)
 
 
 # testSize = [10,50,250,1250,6250,7770,9020,10270,11520,13040]
-testSize = [100,250,750,1250] #,1750,2250,2750,3250,3750,4250,4750,5250,5750,6000
+testSize = [100,500,1000,1500,2000,2500,3000] #3250,3750,4250,4750,5250,5750,6000
 avr_GE = np.zeros(len(testSize))
 print('now the attack phase:')
 
+tracesShuffled,ptShuffled = traceSet(restOftraces,restOfpt)
+
+
 k = 0
 for i in testSize:
-    print('testSize = ',i)
-    tracesShuffled,ptShuffled = traceSet(restOftraces,restOfpt,i)
-    howManytestSet = int(len(tracesShuffled)/i)
-    for j in range(len(tracesShuffled)):
-        tracesTest = tracesShuffled[j:j+i]
+    print('testSize = ', i)
+    # howManytestSet = int(len(tracesShuffled)/i)
+
+    for j in range(10):
+        tracesTest = tracesShuffled[j*i:(j+1)*i]
         ptTest = ptShuffled[j:j+i]
         avr_GE[k]+=(prediction(tracesTest,ptTest))
-        j+=i
-    avr_GE[k]/=howManytestSet
+        print(j*i,(j+1)*i)
+
+    avr_GE[k]/=10
     k+=1
 
 print(avr_GE)
